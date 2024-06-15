@@ -70,6 +70,13 @@ def all_todos(request, profile_id):
             "deadline": todo.deadline
         })
 
+    for todo in Todo.objects.filter(shared_to=owner):
+        result.append({
+            "identifier": todo.identifier,
+            "description": todo.description,
+            "deadline": todo.deadline
+        })
+
     return JsonResponse({'result': result})
 
 
@@ -113,7 +120,7 @@ def share_todo(request, profile_id):
 
     todo = Todo.objects.get(identifier=request['data'].get('identifier'))
     serializer = ToDoSerializer(todo)
-    todo.sharedFrom = person
+    todo.sharedTo = person
 
     if serializer.is_valid():
         serializer.save()
