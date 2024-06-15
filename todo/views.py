@@ -145,6 +145,6 @@ def online_users(request):
     if request.user.is_superuser:
         channel_layer = get_channel_layer()
         online_users = async_to_sync(channel_layer.group_channels)('online_users')
-        return JsonResponse({'online_users_count': online_users})
+        return JsonResponse({'online_users': online_users})
     else:
         return JsonResponse({'error': 'Only superuser can access this endpoint'}, status=401)
