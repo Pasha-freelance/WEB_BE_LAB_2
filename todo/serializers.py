@@ -13,7 +13,8 @@ class UserSerializer(serializers.HyperlinkedModelSerializer):
 class ToDoSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = Todo
-        fields = ['identifier', 'deadline', 'description']
+        fields = ['identifier', 'deadline', 'description', 'shared_from']
+        extra_kwargs = {'shared_from': {'required': False}}
 
 
 class PersonSerializer(serializers.HyperlinkedModelSerializer):

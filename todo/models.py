@@ -22,6 +22,7 @@ class Todo(models.Model):
     identifier = models.CharField(max_length=255, verbose_name='Identifier')
     description = models.CharField(max_length=255, verbose_name='Todo description')
     deadline = models.CharField(max_length=255, verbose_name='Deadline')
+    shared_from = models.ForeignKey(Person, on_delete=models.CASCADE,related_name="shared_from")
     owner = models.ForeignKey(Person, on_delete=models.CASCADE)
 
     def __str__(self):

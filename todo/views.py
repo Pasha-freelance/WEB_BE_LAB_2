@@ -1,5 +1,7 @@
 import uuid
 
+from asgiref.sync import async_to_sync
+from channels.layers import get_channel_layer
 from django.http import JsonResponse
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import permissions, viewsets, status
@@ -102,8 +104,47 @@ def edit_todo(request, identifier):
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
+@api_view(['POST'])
+def share_todo(request, profile_id):
+    try:
+        person = Person.objects.get(profile_id=profile_id)
+    except Person.DoesNotExist:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+
+    todo = Todo.objects.get(identifier=request['data'].get('identifier'))
+    serializer = ToDoSerializer(todo)
+    todo.sharedFrom = person
+
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
 @api_view(['DELETE'])
 def remove_todo(request, identifier):
     todo = Todo.objects.get(identifier=identifier)
     todo.delete()
     return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+# Add a user to the 'online_users' group
+def user_online(profile_id):
+    channel_layer = get_channel_layer()
+    async_to_sync(channel_layer.group_add)('online_users', str(profile_id))
+
+
+# Remove a user from the 'online_users' group
+def user_offline(profile_id):
+    channel_layer = get_channel_layer()
+    async_to_sync(channel_layer.group_discard)('online_users', str(profile_id))
+
+
+# View to get the count of online users (only accessible to superuser)
+def online_users(request):
+    if request.user.is_superuser:
+        channel_layer = get_channel_layer()
+        online_users = async_to_sync(channel_layer.group_channels)('online_users')
+        return JsonResponse({'online_users_count': len(online_users)})
+    else:
+        return JsonResponse({'error': 'Only superuser can access this endpoint'}, status=401)
