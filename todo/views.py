@@ -140,11 +140,11 @@ def user_offline(profile_id):
     async_to_sync(channel_layer.group_discard)('online_users', str(profile_id))
 
 
-# View to get the count of online users (only accessible to superuser)
+#(only accessible to superuser)
 def online_users(request):
     if request.user.is_superuser:
         channel_layer = get_channel_layer()
         online_users = async_to_sync(channel_layer.group_channels)('online_users')
-        return JsonResponse({'online_users_count': len(online_users)})
+        return JsonResponse({'online_users_count': online_users})
     else:
         return JsonResponse({'error': 'Only superuser can access this endpoint'}, status=401)
